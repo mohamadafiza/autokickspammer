@@ -1,0 +1,14 @@
+name: Extract ZIP
+
+on: [push]
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Extract ZIP file
+      run: unzip bot.zip -d extracted_files
