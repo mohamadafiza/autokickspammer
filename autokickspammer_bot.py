@@ -1,5 +1,6 @@
+import os
 from telegram import Update, ChatPermissions
-from telegram.ext import Updater, MessageHandler, Filters, CallbackContext
+from telegram.ext import Updater, MessageHandler, Filters, CallbackContext, CommandHandler
 from collections import defaultdict, deque
 
 # Parameters
@@ -13,6 +14,9 @@ def check_repeated_messages(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
     message_text = update.message.text
+
+    # Log the received message
+    print(f"Received message from user {user_id}: {message_text}")
 
     # Track the messages of the user
     user_history = user_messages[user_id]
@@ -33,15 +37,28 @@ def check_repeated_messages(update: Update, context: CallbackContext):
     else:
         user_messages[user_id] = user_history
 
+# Function to handle the /start command
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text("Hello! I am the spam prevention bot. I'll kick users who send the same message repeatedly.")
+
 def main():
-    # Replace 'YOUR_BOT_TOKEN' with your actual bot token
-    updater = Updater("7694147971:AAGD5CgomNFAX_sBQ6eC7U9HXVXfj6rvVgU", use_context=True)
+    # Fetch the bot token from environment variables (set in Heroku Config Vars)
+    TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+
+    if TELEGRAM_TOKEN is None:
+        raise ValueError("No Telegram bot token provided. Please set TELEGRAM_TOKEN environment variable.")
+
+    # Initialize the Updater and Dispatcher
+    updater = Updater(TELEGRAM_TOKEN, use_context=True)
     dp = updater.dispatcher
 
-    # Handler for text messages
+    # Add /start command handler
+    dp.add_handler(CommandHandler("start", start))
+
+    # Add handler for text messages to check for repeated messages (in groups)
     dp.add_handler(MessageHandler(Filters.text & Filters.group, check_repeated_messages))
 
-    # Start the bot
+    # Start the bot and begin polling
     updater.start_polling()
     updater.idle()
 
