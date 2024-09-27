@@ -1,1 +1,1 @@
-worker: python main.py
+worker: python autokickspammer_bot.py
